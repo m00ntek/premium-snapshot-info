@@ -39,7 +39,7 @@ List of all qualified wallet addresses for airdrop
 | NETA  |               3,843 |    3,473,617 |              10,946.91647 |
 
 ### Merged Data
-The `merged.json` file contains all data from all CSV files in the form of a
+The `all.csv` file contains all data from all CSV files in the form of a
 single JSON file.
 
 

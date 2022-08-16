@@ -2,32 +2,112 @@
 """
 Convert each CSV file to a JSON file.
 """
+import csv
 
 import json
 import csv
 import sys
 
 from urllib.request import urlopen
+#juno1w0ydaqem2xn0w8p28hvvqu9rmahhk2alg0qa9mt0nuuy4dk9yunst0yw0z
+
 
 
 def main():
-    url_template = "https://raw.githubusercontent.com/Gelotto/airdrop-snapshot-info/main/{}.txt"
-    assets = ["atom", "juno", "scrt", "neta", "osmo", "stars"]
+    multiplier = 10000
+    assets = ["osmo", "atom", "juno", "stars", "neta"]
+    dictionary = {}
+    # dictionary1 = {"osmo": "osmo", "atom": "cosmos", "juno": "juno", "neta": "juno",
+    # "stars": "stars", "scrt": "secret" }
+    total_addresses = 0
+    total_amount = 0
+    conflicts = 0
+    all_objects = []
+    max_amount = 800 * multiplier
+    all_objects2 = []
+    atom_dictionary = {}
+    juno_dictionary = {}
+    scrt_dictionary = {}
+    neta_dictionary = {}
+    osmo_dictionary = {}
+    stars_dictionary = {}
 
     for asset in assets:
+        # url_template = 'https://raw.githubusercontent.com/Gelotto/airdrop-snapshot-info/main/' + asset +'.txt'
+        url_template = '../' + asset +'-to-juno.csv'
+
         json_objects = []
         csv_file_url = url_template.format(asset)
-        print(f"fetching {csv_file_url}...")
-        csv_lines = [line.decode() for line in urlopen(csv_file_url)]
-        for addr, _, amount in csv.reader(csv_lines[1:]):
-            json_objects.append({"address": addr, "amount": amount.strip()})
+        # print(f"fetching {csv_file_url}...")
 
-        output_filepath = f'./json/{asset}.json'
-        print(f"writing json data to {output_filepath}...")
+        csv_lines = [line for line in open(csv_file_url)]
+        # print(csv_lines)
+        for address, amount in csv.reader(csv_lines[1:]):
+
+            # if asset != 'juno' or asset != 'neta':
+            #     new_address = address.replace(dictionary1[asset], 'juno', 1)
+            # print(new_address)
+            starting_amount = 0
+            if address in dictionary:
+                conflicts = conflicts + 1
+                current_value = dictionary[address]
+                starting_amount = current_value["amount"] * multiplier
+                
+                # print(asset)
+            if asset == 'juno':
+                dictionary[address] = {
+                    "address": address, "amount": 800 * multiplier
+                    }
+            if asset == 'atom':
+                # print(starting_amount)
+                amount = min(max_amount, starting_amount + 550 * multiplier)
+                dictionary[address] = {"address": address, "amount": amount}
+            if asset == 'osmo':
+                amount = min(max_amount, starting_amount + 300* multiplier)
+                dictionary[address] = {"address": address, "amount": amount}
+            if asset == 'neta':
+                amount = min(max_amount, starting_amount + 400 * multiplier)
+                dictionary[address] = {"address": address, "amount": amount}
+            if asset == 'scrt':
+                amount = min(max_amount, starting_amount + 300 * multiplier)
+                dictionary[address] = {"address": address, "amount": amount}
+            if asset == 'stars':
+                amount = min(max_amount, starting_amount + 300 * multiplier)
+                dictionary[address] = {"address": address, "amount": amount}
+            # if asset == 'osmo':
+            #     osmo_dictionary[addr] = {"address": addr, "amount": 200}
+            # dictionary[addr] = {"address": addr, "amount": 200}
+            total_addresses = total_addresses + 1
+            json_objects.append({"address": address, "amount": str(amount).strip()})
+
+        output_filepath = f'../json/{asset}.json'
+        # print(f"writing json data to {output_filepath}...")
 
         with open(output_filepath, "w") as output_json_file:
             json.dump(json_objects, output_json_file)
+    for key in dictionary:
+        value = dictionary[key]
+        total_amount = total_amount + value["amount"]
+        all_objects.append({"address": value["address"], "amount": str(value["amount"]).strip()})
+        all_objects2.append([value["address"], str(value["amount"]).strip()])
+    
+    output_filepath = f'../json/all.json'
+        # print(f"writing json data to {output_filepath}...")
 
+    with open(output_filepath, "w") as output_json_file:
+        json.dump(all_objects, output_json_file)        
+    output_filepath = f'../json/all.csv'
+    with open(output_filepath, 'w', newline='') as csvfile:
+        spamwriter = csv.writer(csvfile, delimiter=',',
+                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        spamwriter.writerow(['address','amount'])
+        spamwriter.writerows(all_objects2)
+
+        # print(value)
+    print(total_amount/multiplier)
+    print(len(dictionary))
+    print(total_addresses)
+    print(conflicts)
 
 if __name__ == "__main__":
     sys.exit(main())
